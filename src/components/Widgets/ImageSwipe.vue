@@ -137,6 +137,7 @@ export default {
       required: false
     }
   },
+  // eslint-disable-next-line
   components: { VueHammer, GridLoader },
   directives: {
     imagesLoaded
