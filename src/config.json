@@ -15,10 +15,10 @@
       "value": 1
     },
     "timing": {
-      "stimulusDuration": "3000",
+      "stimulusDuration": "5000",
       "stimulusFadeIn": false,
       "timeoutValue": "0",
-      "interStimuliDuration": "1000"
+      "interStimuliDuration": "500"
     }
   },
   "iconAttribute": {
