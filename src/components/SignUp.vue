@@ -32,6 +32,29 @@
           </b-button>
         </b-form-group>
 
+        <b-form-group id="AgeInputGroup" label="Age:" label-for="age">
+          <b-form-input
+            id="age"
+            type="age"
+            v-model="form.age"
+            required
+            placeholder="Enter your age"
+          >
+          </b-form-input>
+
+          <div class="mt-2">
+            Current grade or highest education: {{ form.gradelevel }}
+          </div>
+          <b-form-input
+            id="gradelevel"
+            v-model="form.gradelevel"
+            type="range"
+            min="0"
+            max="13"
+          >
+          </b-form-input>
+        </b-form-group>
+
         <b-form-group
           id="emailAddressInputGroup"
           label="Email address:"
@@ -134,7 +157,8 @@ export default {
         password: "",
         password2: "",
         username: "",
-        consented: false
+        consented: false,
+        age: ""
       },
       /**
        * A variable to keep track of errors, whether to show it and the error message.
@@ -241,12 +265,14 @@ export default {
         .ref("users")
         .child(user.displayName)
         .set({
+          age: this.form.age,
+          gradelevel: this.form.gradelevel,
           score: 0,
           level: 0,
           admin: false,
           taken_tutorial: false,
           consent: this.form.consented,
-          consentedOn: new Date()
+          consentedOn: Date()
         })
         .then(() => {})
         .catch(() => {});
