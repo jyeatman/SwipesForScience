@@ -575,7 +575,7 @@ export default {
   transition-duration: 0s;
 }
 .image_area {
-  background: black;
+  background: white;
   position: relative;
 }
 .loader {
