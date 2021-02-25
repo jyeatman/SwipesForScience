@@ -162,9 +162,9 @@
     "blankImage":
       "https://raw.githubusercontent.com/SwipesForScience/testConfig/master/images/undraw_blank_canvas.svg?sanitize=true",
     "votingImage":
-      "https://upload.wikimedia.org/wikipedia/commons/6/62/F1_white_flag.svg",
+      "https://raw.githubusercontent.com/jyeatman/SwipesForScience/master/src/assets/blankwhite.svg",
     "interStimuliImage":
-      "https://image.freepik.com/free-vector/get-ready-neon-signs-style-text_118419-1315.jpg"
+      "https://raw.githubusercontent.com/jyeatman/SwipesForScience/master/src/assets/FixationCross.svg"
   },
   "chats": {
     "blankImage": "https://raw.githubusercontent.com/SwipesForScience/testConfig/master/images/undraw_no_data.svg?sanitize=true"
