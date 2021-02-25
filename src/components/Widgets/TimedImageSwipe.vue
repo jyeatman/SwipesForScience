@@ -1,5 +1,5 @@
 <template>
-  <div class="imageSwipe" v-if="showStimuli">
+  <div class="imageSwipe">
     <transition :key="swipe" :name="swipe">
       <div class="user-card" :key="baseUrl">
         <div class="image_area">
@@ -9,9 +9,10 @@
               'mx-auto',
               widgetProperties.timing.stimulusFadeIn ? '' : 'no-fade-in'
             ]"
-            :src="baseUrl"
+            :src="showStimuli ? baseUrl : ''"
             v-hammer:swipe.horizontal="onSwipe"
-            placeholder="https://unsplash.it/500"
+            :placeholder="buttonsDisabled ? interStimuliImage : votingImage"
+            :blur="0"
             :aspect-ratio="1"
             @onLoad="onImgLoad"
           >
@@ -23,6 +24,7 @@
             variant="danger"
             v-if="playMode"
             style="float:left"
+            :disabled="buttonsDisabled"
             @click="swipeLeft"
             v-shortkey="['arrowleft']"
             @shortkey="swipeLeft"
@@ -52,6 +54,7 @@
             variant="success"
             v-if="playMode"
             style="float:right"
+            :disabled="buttonsDisabled"
             @click="swipeRight"
             v-shortkey="['arrowright']"
             @shortkey="swipeRight"
@@ -139,6 +142,20 @@ export default {
     tutorialStep: {
       type: Number,
       required: false
+    },
+    /**
+     * Image to display when stimuli duration is passed but user can still vote.
+     */
+    votingImage: {
+      type: String,
+      required: false
+    },
+    /**
+     * Image to display during (optional) pause before next stimulus, after voting
+     */
+    interStimuliImage: {
+      type: String,
+      required: false
     }
   },
   // eslint-disable-next-line
@@ -162,6 +179,11 @@ export default {
        */
       durationTimer: null,
       /**
+       * Timer object for voting duration handling.
+       * Used when `widgetProperties.votingDuration` is set.
+       */
+      votingDurationTimer: null,
+      /**
        * Timer object for inter-stimuli duration handling.
        * Used when `widgetProperties.timing.interStimuliDuration` is set.
        */
@@ -169,7 +191,11 @@ export default {
       /**
        * flag to hide stimulus if `widgetProperties.timing.interStimuliDuration` is set.
        */
-      showStimuli: true
+      showStimuli: true,
+      /**
+       * flag to hide stimulus if `widgetProperties.timing.interStimuliDuration` is set.
+       */
+      buttonsDisabled: true
     };
   },
   computed: {
@@ -212,6 +238,7 @@ export default {
   },
   beforeUnmount() {
     clearTimeout(this.durationTimer);
+    clearTimeout(this.votingDurationTimer);
     clearTimeout(this.interStimuliTimer);
   },
   methods: {
@@ -240,6 +267,7 @@ export default {
       const interStimuliDuration = this.timing.interStimuliDuration;
       if (interStimuliDuration) {
         this.showStimuli = false;
+        this.buttonsDisabled = true;
         this.interStimuliTimer = setTimeout(() => {
           this.showStimuli = true;
           clearTimeout(this.interStimuliTimer);
@@ -251,9 +279,15 @@ export default {
      */
     onImgLoad() {
       this.$emit("setStartTime", new Date());
+      this.buttonsDisabled = false;
       if (this.timing.stimulusDuration) {
         this.durationTimer = setTimeout(() => {
-          this.vote(this.timing.timeoutValue);
+          this.showStimuli = false;
+          if (![undefined, null].includes(this.timing.votingDuration)) {
+            this.votingDurationTimer = setTimeout(() => {
+              this.vote(this.timing.timeoutValue);
+            }, this.timing.votingDuration);
+          }
         }, this.timing.stimulusDuration);
       }
     },
@@ -358,6 +392,7 @@ export default {
       } else {
         this.$emit("widgetRating", val);
         clearTimeout(this.durationTimer);
+        clearTimeout(this.votingDurationTimer);
         clearTimeout(this.interStimuliTimer);
       }
     },

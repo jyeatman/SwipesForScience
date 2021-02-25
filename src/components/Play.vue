@@ -40,6 +40,8 @@
           :widgetPointer="widgetPointer"
           :widgetProperties="widgetProperties"
           :widgetSummary="widgetSummary"
+          :votingImage="votingImage"
+          :interStimuliImage="interStimuliImage"
           :userSettings="userSettings"
           :needsSecret="needsSecret"
           :serverSecret="serverSecret"
@@ -103,6 +105,8 @@ import _ from "lodash";
 import Vue from "vue";
 import WidgetSelector from "./WidgetSelector";
 import Flask from "./Animations/Flask";
+import axios from "axios";
+import csv from "papaparse";
 
 Vue.component("WidgetSelector", WidgetSelector);
 
@@ -214,7 +218,20 @@ export default {
       /**
        * secret key (btoa'd) from the firebase server, in case the widget is locked.
        */
-      serverSecret: ""
+      serverSecret: "",
+      /**
+       * If rulesSequence is configured, keeps track of current rule
+       */
+      currentRuleIndex: 0,
+      /**
+       * If rulesSequence is configured, keeps track of all stimuli id seen in current series
+       */
+      seenInSeries: [],
+      /**
+       * If rulesSequence is configured, keeps track of all stimuli id seen since play began
+       */
+      seenSinceStart: [],
+      stimParams: {}
     };
   },
   watch: {
@@ -256,6 +273,7 @@ export default {
     this.initSeenSamples();
     this.initUserSettings();
     this.fetchServerSecret();
+    this.initStimParams();
   },
   components: {
     // WidgetSelector,
@@ -275,6 +293,18 @@ export default {
       return this.config.play.blankImage;
     },
     /**
+     * for TimedImageSwipe widget
+     */
+    votingImage() {
+      return this.config.play.votingImage;
+    },
+    /**
+     * for TimedImageSwipe widget
+     */
+    interStimuliImage() {
+      return this.config.play.interStimuliImage;
+    },
+    /**
      * type of widget, named exactly how it is in the Widgets folder
      */
     widgetType() {
@@ -285,6 +315,20 @@ export default {
      */
     widgetProperties() {
       return this.config.widgetProperties;
+    },
+    /**
+     * Provides the ability to configure the game as a set of series,
+     * where each series has a configurable number of stimuli and decides
+     * the next stimuli by a given rule.
+     */
+    rulesSequence() {
+      return this.config.rulesSequence;
+    },
+    /**
+     * If rulesSequence is configured, returns the current rule (filter) function
+     */
+    currentRule() {
+      return this.rulesSequence[this.currentRuleIndex].rule;
     },
     /**
      * whether or not the widget requires a secret (for locking down data)
@@ -299,7 +343,6 @@ export default {
      * this property saves the state of the widget, if it needs it.
      */
     initUserSettings() {
-      // console.log('updating user settings');
       this.db
         .ref("userSettings")
         .child(this.userInfo.displayName)
@@ -339,7 +382,9 @@ export default {
           this.noData = true;
         } else {
           this.startTime = new Date();
-          this.setNextSampleId();
+          this.rulesSequence
+            ? this.setNextSampleIdByRule()
+            : this.setNextSampleId();
         }
       });
     },
@@ -348,7 +393,6 @@ export default {
      * `/userSeenSamples/<username>` document from firebase, once.
      */
     initSeenSamples() {
-      // console.log('userSeenSamples', this.userInfo.displayName);
       this.db
         .ref("userSeenSamples")
         .child(this.userInfo.displayName)
@@ -359,6 +403,19 @@ export default {
             });
             /* eslint-enable */
         });
+    },
+    initStimParams() {
+      axios.get(this.config.stimParamsUrl).then(({ data }) => {
+        // resp.data has a list of firebase-friendly strings
+        const stimParamsList = csv.parse(data, {
+          header: true,
+          dynamicTyping: true
+        }).data;
+        stimParamsList.forEach(params => {
+          this.stimParams[params.imagename] = params;
+          delete params.imagename;
+        });
+      });
     },
     /**
      * A method to shuffle an array.
@@ -467,20 +524,71 @@ export default {
       this.updateSeen();
 
       // 4. set the next Sample
-      this.setNextSampleId();
+      this.rulesSequence
+        ? this.setNextSampleIdByRule(response, timeDiff)
+        : this.setNextSampleId();
     },
     /**
      * method to get the next sample id to show in the widget
-     * view time gets reset first, then the new sample is found and set.
      */
     setNextSampleId() {
-      this.startTime = new Date();
-
-      const sampleId = this.sampleUserPriority()[0];
+      const sample = this.sampleUserPriority()[0];
 
       // if sampleId isn't null, set the widgetPointer
+      if (sample) {
+        this.widgetPointer = sample[".key"];
+      }
+    },
+    /**
+     * method to get the next sample id to show in the widget
+     * by filtering by configured rule
+     */
+    setNextSampleIdByRule(response, timeDiff) {
+      const params = {
+        userData: this.userData,
+        lastStimulus: {
+          widgetPointer: this.widgetPointer,
+          widgetSummary: this.widgetSummary,
+          response,
+          timeDiff,
+          params: this.stimParams[this.widgetPointer]
+        },
+        currentGame: {
+          seenSinceStart: this.seenSinceStart,
+          seenInSeries: this.seenInSeries
+        },
+        allGames: {
+          samplesAndCounts: this.sampleCounts,
+          userSeenSamples: this.userSeenSamples
+        },
+        stimParams: this.stimParams
+      };
+
+      const sampleId = this.currentRule(params);
+      // if sampleId isn't null, set the widgetPointer
       if (sampleId) {
-        this.widgetPointer = sampleId[".key"];
+        this.widgetPointer = sampleId;
+      }
+
+      this.trackRuleProgress(this.widgetPointer);
+    },
+    /**
+     *
+     */
+    trackRuleProgress(sampleId) {
+      this.seenInSeries.push(sampleId);
+      this.seenSinceStart.push(sampleId);
+
+      // move to the next rule and clear series tracker
+      // if enough trials have been seen
+      const { numTrials } = this.rulesSequence[this.currentRuleIndex];
+      if (this.seenInSeries.length >= numTrials) {
+        this.currentRuleIndex++;
+        // move back to the first rule if last rule is passed
+        if (this.currentRuleIndex >= this.rulesSequence.length) {
+          this.currentRuleIndex = 0;
+        }
+        this.seenInSeries = [];
       }
     },
     /**
@@ -575,3 +683,5 @@ export default {
   }
 };
 </script>
+
+https://github.com/yeatmanlab/SwipesForScience
