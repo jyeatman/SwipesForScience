@@ -24,6 +24,8 @@
         :widgetPointer="widgetPointer"
         :widgetProperties="widgetProperties"
         :widgetSummary="widgetSummary"
+        :votingImage="votingImage"
+        :interStimuliImage="interStimuliImage"
         :userSettings="userSettings"
         :tutorialStep="tutorialStep"
         v-on:widgetRating="widgetRating"
@@ -95,6 +97,17 @@ export default {
      */
     widgetSummary: {
       type: Object,
+      required: false
+    },
+    /**
+     * for TimedImageSwipe widget
+     */
+    votingImage: {
+      type: String,
+      required: false
+    },
+    interStimuliImage: {
+      type: String,
       required: false
     },
     /**

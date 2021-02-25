@@ -2,12 +2,25 @@
   "needsTutorial": true,
   "manifestUrl": "https://raw.githubusercontent.com/jyeatman/SwipesForScience/master/data/manifest.json",
   "manifestType": "json",
-  "widgetType": "ImageSwipe",
+  "widgetType": "TimedImageSwipe",
   "widgetProperties": {
     "baseUrlTemplate": "https://roar-ldt-v2.s3.amazonaws.com/{0}.jpg",
     "delimiter": "__",
-    "leftSwipeLabel": "Fake",
-    "rightSwipeLabel": "Real"
+    "leftSwipe": {
+      "label": "Fake",
+      "value": -1
+    },
+    "rightSwipe": {
+      "label": "Real",
+      "value": 1
+    },
+    "timing": {
+      "stimulusDuration": "500",
+      "stimulusFadeIn": false,
+      "timeoutValue": "0",
+      "interStimuliDuration": "500",
+      "votingDuration":null
+    }
   },
   "iconAttribute": {
     "name": "openmoji",
@@ -146,7 +159,12 @@
     "backgroundUrl": "https://github.com/jyeatman/SwipesForScience/blob/master/src/assets/Cover-WordDetective-scaled.png?raw=true"
   },
   "play": {
-    "blankImage": "https://raw.githubusercontent.com/SwipesForScience/testConfig/master/images/undraw_blank_canvas.svg?sanitize=true"
+    "blankImage":
+      "https://raw.githubusercontent.com/SwipesForScience/testConfig/master/images/undraw_blank_canvas.svg?sanitize=true",
+    "votingImage":
+      "https://raw.githubusercontent.com/jyeatman/SwipesForScience/master/src/assets/blankwhite.svg",
+    "interStimuliImage":
+      "https://raw.githubusercontent.com/jyeatman/SwipesForScience/master/src/assets/FixationCross.svg"
   },
   "chats": {
     "blankImage": "https://raw.githubusercontent.com/SwipesForScience/testConfig/master/images/undraw_no_data.svg?sanitize=true"
@@ -172,25 +190,25 @@
         {
           "text": "SUN is a real word. So swipe RIGHT.",
           "pointer": "A-sun",
-          "answer": 0,
+          "answer": 1,
           "tutorialStep": 0
         },
         {
           "text": "BULBET is not a real word. So swipe LEFT.",
           "pointer": "A-bulbet",
-          "answer": 0,
+          "answer": -1,
           "tutorialStep": 1
         },
         {
           "text": "INSIDE is a real word. So swipe RIGHT.",
           "pointer": "A-inside",
-          "answer": 0,
+          "answer": 1,
           "tutorialStep": 0
         },
         {
           "text": "BLEDGE is a fake word. So swipe LEFT.",
           "pointer": "A-bledge",
-          "answer": 0,
+          "answer": -1,
           "tutorialStep": 1
         },
         {
