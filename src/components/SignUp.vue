@@ -32,7 +32,7 @@
           </b-button>
         </b-form-group>
 
-        <b-form-group id="AgeInputGroup" label="Age:" label-for="age">
+        <b-form-group id="AgeInputGroup" label-for="age">
           <b-form-input
             id="age"
             type="age"
@@ -41,18 +41,40 @@
             placeholder="Enter your age"
           >
           </b-form-input>
-
-          <div class="mt-2">
-            Current grade or highest education: {{ form.gradelevel }}
-          </div>
-          <b-form-input
-            id="gradelevel"
-            v-model="form.gradelevel"
-            type="range"
-            min="0"
-            max="13"
+          <b-form-select
+            id="education"
+            type="education"
+            v-model="form.education"
+            required
           >
-          </b-form-input>
+            <b-form-select-option value="null"
+              >Grade/Education</b-form-select-option
+            >
+            <b-form-select-option value="1">1st</b-form-select-option>
+            <b-form-select-option value="2">2nd</b-form-select-option>
+            <b-form-select-option value="3">3rd</b-form-select-option>
+            <b-form-select-option value="4">4th</b-form-select-option>
+            <b-form-select-option value="5">5th</b-form-select-option>
+            <b-form-select-option value="6">6th</b-form-select-option>
+            <b-form-select-option value="7">7th</b-form-select-option>
+            <b-form-select-option value="8">8th</b-form-select-option>
+            <b-form-select-option value="9">9th</b-form-select-option>
+            <b-form-select-option value="10">10th</b-form-select-option>
+            <b-form-select-option value="11">11th</b-form-select-option>
+            <b-form-select-option value="12">12th</b-form-select-option>
+            <b-form-select-option value="some colege"
+              >Some college</b-form-select-option
+            >
+            <b-form-select-option value="bachelor"
+              >Bachelor's degree</b-form-select-option
+            >
+            <b-form-select-option value="master"
+              >Master's degree</b-form-select-option
+            >
+            <b-form-select-option value="doctor"
+              >Doctorate degree</b-form-select-option
+            >
+          </b-form-select>
         </b-form-group>
 
         <b-form-group
@@ -101,11 +123,7 @@
           </b-form-input>
         </b-form-group>
 
-        <b-form-group
-          id="password2InputGroup"
-          label="Password Again:"
-          label-for="password2Input"
-        >
+        <b-form-group id="password2InputGroup" label-for="password2Input">
           <b-alert :show="!validated" variant="danger">
             Make sure your passwords match!
           </b-alert>
@@ -158,7 +176,8 @@ export default {
         password2: "",
         username: "",
         consented: false,
-        age: ""
+        age: "",
+        education: "null"
       },
       /**
        * A variable to keep track of errors, whether to show it and the error message.
@@ -266,7 +285,7 @@ export default {
         .child(user.displayName)
         .set({
           age: this.form.age,
-          gradelevel: this.form.gradelevel,
+          education: this.form.education,
           score: 0,
           level: 0,
           admin: false,
